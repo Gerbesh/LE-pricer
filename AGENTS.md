@@ -36,3 +36,4 @@
 - Push every committed change to the Git remote immediately; do not leave local-only commits.
 - Maintain an up-to-date CHANGELOG.md documenting features, fixes, and documentation updates.
 - Bump the project version in the VERSION file by +0.0.1 with each change (e.g., 0.0.9 -> 0.0.10, roll over to 0.1.0); keep semantic progression consistent.
+- For PowerShell commands that write files, always specify UTF-8 encoding (e.g., `-Encoding UTF8`) so Cyrillic text stays intact.
