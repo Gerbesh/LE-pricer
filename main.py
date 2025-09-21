@@ -48,8 +48,6 @@ def main():
     worker.boxReady.connect(overlay.show_box)
     worker.inventoryReady.connect(overlay.show_inventory_hints)
     worker.status.connect(win.statusMsg)
-    worker.requestTemplate.connect(win._open_template_capture)
-    worker.manualInventoryCapture.connect(win._open_manual_inventory_dialog)
     win.showBox.connect(overlay.show_box)
     win.attach_worker(worker)
     # auto-refresh known table if worker ever signals updates (reserved)

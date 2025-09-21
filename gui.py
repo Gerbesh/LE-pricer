@@ -1,6 +1,7 @@
 
 import os
 import math
+import logging
 from PySide6 import QtCore, QtWidgets, QtGui
 from ocr import DEFAULT_TESSERACT_EXE, _template_threshold_default
 from template_manager import save_samples, save_inventory_sample

@@ -55,5 +55,18 @@ Hotkeys are configurable inside the main window and updates apply instantly.
 - **OCR misses characters:** verify the correct language packs are installed and re-run template calibration with a crisp tooltip screenshot.
 - **Overlay not visible:** confirm Last Epoch uses windowed or borderless mode so the overlay can be drawn on top.
 
+## FAQ
+
+### English
+**How do I change the capture hotkeys?** Use the main window inputs under the Hotkeys section; edits apply immediately to the background worker.
+**Where do I point the app to Tesseract?** Set the executable path in the Tesseract field on the main screen; leave blank for the default installer path.
+**How do I recalibrate templates?** Press F3 or use the template capture button; select the item name box and save the sample.
+
+### Р§Р°СЃС‚Рѕ Р·Р°РґР°РІР°РµРјС‹Рµ РІРѕРїСЂРѕСЃС‹ (RU)
+**РљР°Рє РёР·РјРµРЅРёС‚СЊ РіРѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё?** РћС‚РєСЂРѕР№С‚Рµ РіР»Р°РІРЅРѕРµ РѕРєРЅРѕ Рё РѕР±РЅРѕРІРёС‚Рµ РїРѕР»СЏ РіРѕСЂСЏС‡РёС… РєР»Р°РІРёС€; РёР·РјРµРЅРµРЅРёСЏ СЃСЂР°Р·Сѓ РїСЂРёРјРµРЅСЏСЋС‚СЃСЏ Рє С„РѕРЅРѕРІРѕРјСѓ СЃРµСЂРІРёСЃСѓ.
+**Р“РґРµ СѓРєР°Р·Р°С‚СЊ РїСѓС‚СЊ Рє Tesseract?** Р’РІРµРґРёС‚Рµ РїСѓС‚СЊ Рє tesseract.exe РІ РїРѕР»Рµ "Tesseract" РЅР° РіР»Р°РІРЅРѕРј СЌРєСЂР°РЅРµ РёР»Рё РѕСЃС‚Р°РІСЊС‚Рµ РµРіРѕ РїСѓСЃС‚С‹Рј РґР»СЏ Р·РЅР°С‡РµРЅРёСЏ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ.
+**РљР°Рє РїРµСЂРµСЃРЅСЏС‚СЊ С€Р°Р±Р»РѕРЅС‹ РїСЂРµРґРјРµС‚РѕРІ?** РќР°Р¶РјРёС‚Рµ F3 РёР»Рё РєРЅРѕРїРєСѓ Р·Р°С…РІР°С‚Р° С€Р°Р±Р»РѕРЅРѕРІ, РІС‹РґРµР»РёС‚Рµ СЂР°РјРєРѕР№ РЅР°Р·РІР°РЅРёРµ РїСЂРµРґРјРµС‚Р° Рё СЃРѕС…СЂР°РЅРёС‚Рµ РѕР±СЂР°Р·РµС†.
+
 ## License
 The project is distributed under the MIT License. See `LICENSE` if supplied with the release.
+
