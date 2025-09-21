@@ -43,7 +43,7 @@ def _format_price(value) -> str:
     return f"-{out}" if neg else out
 
 
-def _limit_inventory_duplicates(hints: list[dict[str, object]], per_item: int = 3) -> list[dict[str, object]]:
+def _limit_inventory_duplicates(hints: list[dict[str, object]], per_item: int = 9) -> list[dict[str, object]]:
     order: list[str] = []
     buckets: dict[str, list[dict[str, object]]] = {}
     for hint in hints:
