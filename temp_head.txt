@@ -1,0 +1,200 @@
+
+from PIL import Image
+import pytesseract, re, io, os, logging, math, ctypes, sys, glob
+import cv2 as cv
+import numpy as np
+from datetime import datetime
+from mss import mss
+# Paddle OCR disabled by request; keep stub to avoid optional import cost
+PaddleOCR = None  # type: ignore
+from log_utils import enforce_logs_quota
+
+# Heuristics tuned for Russian+English text from LE tooltip
+TESS_CONFIG = "--oem 1 --psm 6 -c preserve_interword_spaces=1"
+
+# Default Windows installation path for Tesseract OCR
+DEFAULT_TESSERACT_EXE = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+
+logger = logging.getLogger(__name__)
+
+# App-controlled flag to save debug images (default: off)
+_DEBUG_SAVE_IMAGES = False
+
+def set_debug_image_saving(enabled: bool) -> None:
+    global _DEBUG_SAVE_IMAGES
+    _DEBUG_SAVE_IMAGES = bool(enabled)
+
+
+def _debug_enabled() -> bool:
+    # Enable saving images only if the app flag is set or env overrides
+    if _DEBUG_SAVE_IMAGES:
+        return True
+    env = os.getenv("PRICER_DEBUG_SAVE", "0").strip().lower()
+    return env in ("1", "true", "yes", "on")
+
+def _template_threshold_default() -> float:
+    try:
+        v = float(os.getenv("PRICER_TEMPLATE_THRESHOLD", "0.60"))
+        if 0.0 < v <= 1.0:
+            return v
+    except Exception:
+        pass
+    return 0.60
+
+def _resolve_tesseract_path(bin_path: str | None) -> str | None:
+    """Resolve a user-provided path to the tesseract executable.
+
+    Accepts either a direct path to `tesseract.exe` or a directory path
+    (in which case `tesseract.exe` is appended). Returns None if not resolvable.
+    """
+    if not bin_path:
+        return None
+    path = bin_path.strip().strip('"')
+    if not path:
+        return None
+    if os.path.isdir(path):
+        candidate = os.path.join(path, "tesseract.exe")
+    else:
+        candidate = path
+    return candidate
+
+
+def set_tesseract_path(bin_path: str | None):
+    # Prefer provided path; fall back to default Windows path if present
+    candidate = _resolve_tesseract_path(bin_path) or DEFAULT_TESSERACT_EXE
+    if candidate and os.path.exists(candidate):
+        pytesseract.pytesseract.tesseract_cmd = candidate
+        logger.info("Using Tesseract at: %s", candidate)
+    else:
+        # Leave pytesseract to use PATH; log warning for visibility
+        logger.warning("Tesseract not found at provided/default path: %s", candidate)
+
+def _screen_geom():
+    with mss() as sct:
+        mon = sct.monitors[0]
+        return mon["left"], mon["top"], mon["width"], mon["height"]
+
+
+def _get_cursor_pos() -> tuple[int, int] | None:
+    if os.name == "nt":
+        class POINT(ctypes.Structure):
+            _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+        pt = POINT()
+        if ctypes.windll.user32.GetCursorPos(ctypes.byref(pt)):
+            return int(pt.x), int(pt.y)
+    return None
+
+
+def _grab_bbox(left: int, top: int, width: int, height: int) -> Image.Image:
+    with mss() as sct:
+        raw = sct.grab({"left": left, "top": top, "width": width, "height": height})
+        img = Image.frombytes("RGB", raw.size, raw.rgb)
+        return img
+
+
+def grab_screen() -> Image.Image:
+    x, y, w, h = _screen_geom()
+    return _grab_bbox(x, y, w, h)
+
+
+def ocr_full(img: Image.Image, debug_save: str | None = None, allow_soft: bool = True):
+    # Simplified: call Tesseract directly on the image without preprocessing
+    logger.debug("Starting OCR on image size: %s", getattr(img, 'size', None))
+    if debug_save and _debug_enabled():
+        try:
+            os.makedirs(os.path.dirname(debug_save) or ".", exist_ok=True)
+            img.convert('RGB').save(debug_save)
+            logger.info("Saved OCR input image: %s", debug_save)
+            enforce_logs_quota(300.0, logs_dir=os.path.dirname(debug_save) or "logs")
+        except Exception as e:
+            logger.warning("Failed to save OCR input image: %s", e)
+    data = pytesseract.image_to_data(
+        img,
+        lang="rus+eng",
+        config=TESS_CONFIG,
+        output_type=pytesseract.Output.DICT,
+    )
+    return data
+
+
+## Paddle OCR removed — using Tesseract only
+
+# Title band helpers removed in simplified pipeline
+
+_ALLOWED_RE = re.compile(r"[^0-9A-Za-zА-Яа-яЁё\-\(\)\[\] \+']+")
+
+
+def _clean_text(s: str) -> str:
+    s = _ALLOWED_RE.sub(" ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def parse_item(data_dict):
+    # Find topmost text line -> assume it is item name line
+    n = len(data_dict["text"])
+    # Group words into lines and score them
+    lines = {}
+    for i in range(n):
+        txt_raw = (data_dict["text"][i] or "").strip()
+        if not txt_raw:
+            continue
+        # skip lines that obviously are not the title
+        low = txt_raw.lower()
+        if re.search(r"^(\+|\d)", low):
+            continue
+        if any(k in low for k in ["легендар", "потенциал", "броня"]):
+            continue
+        key = (
+            data_dict["page_num"][i],
+            data_dict["block_num"][i],
+            data_dict["par_num"][i],
+            data_dict["line_num"][i],
+        )
+        lines.setdefault(key, {"words": [], "lefts": [], "tops": [], "confs": []})
+        lines[key]["words"].append(txt_raw)
+        lines[key]["lefts"].append(int(data_dict["left"][i]))
+        lines[key]["tops"].append(int(data_dict["top"][i]))
+        try:
+            conf = float(data_dict["conf"][i])
+        except Exception:
+            conf = 0.0
+        lines[key]["confs"].append(conf)
+
+    # Prepare a sorted list of lines by top position for downstream fuzzy matching
+    sorted_line_items = []
+    for key, val in lines.items():
+        top = min(val["tops"]) if val["tops"] else 0
+        left = min(val["lefts"]) if val["lefts"] else 0
+        text = _clean_text(" ".join(val["words"]))
+        if not text:
+            continue
+        sorted_line_items.append((top, left, text))
+    sorted_line_items.sort()
+
+    # Select candidate: highest avg conf among topmost 30% lines
+    if lines:
+        items = []
+        for key, val in lines.items():
+            text = _clean_text(" ".join(val["words"]))
+            if not text or len(text) < 3:
+                continue
+            avg_conf = sum(val["confs"]) / max(1, len(val["confs"]))
+            top = min(val["tops"]) if val["tops"] else 0
+            left = min(val["lefts"]) if val["lefts"] else 0
+            alpha_ratio = sum(ch.isalpha() for ch in text) / max(1, len(text))
+            items.append((top, -avg_conf, -alpha_ratio, -len(text), text, left))
+        items.sort()
+        # consider topmost third
+        take = max(1, len(items) // 3)
+        subset = items[:take]
+        # choose best by avg_conf then alpha_ratio then length
+        subset.sort(key=lambda x: (x[1], x[2], x[3]))
+        if subset:
+            top, _, _, _, best_text, best_left = subset[0]
+            name = best_text
+            name_left = best_left
+            name_top = top
+        else:
+            name = ""
+            name_left = 80
