@@ -6,9 +6,6 @@ from db import PriceDB
 from ocr import (
     detect_roi,
     set_debug_image_saving,
-    set_tesseract_path,
-    ocr_full,
-    parse_item,
     get_last_detection_stats,
     _screen_geom,
     _grab_bbox,
@@ -68,13 +65,12 @@ class OCRWorker(QtCore.QObject):
     inventoryReady = QtCore.Signal(list)  # list of hint payloads
     manualInventoryCapture = QtCore.Signal(object)  # payload for manual template capture
 
-    def __init__(self, db: PriceDB, hotkey: str = "F1", inventory_hotkey: str = "F2", capture_hotkey: str | None = "F3", tesseract_path: str | None = None, template_threshold: float | None = None, save_debug_images: bool = False):
+    def __init__(self, db: PriceDB, hotkey: str = "F1", inventory_hotkey: str = "F2", capture_hotkey: str | None = "F3", template_threshold: float | None = None, save_debug_images: bool = False):
         super().__init__()
         self.db = db
         self.hotkey = hotkey
         self.inventory_hotkey = inventory_hotkey
         self.capture_hotkey = capture_hotkey
-        self.tesseract_path = tesseract_path
         self.template_threshold = template_threshold
         self.save_debug_images = bool(save_debug_images)
         self._running = False
@@ -132,19 +128,6 @@ class OCRWorker(QtCore.QObject):
     def stop(self):
         self._running = False
 
-    def _ocr_roi(self, roi_img, roi_offset: tuple[int, int]):
-        """Run OCR on a pre-captured ROI without re-grabbing the screen."""
-        set_tesseract_path(self.tesseract_path)
-        debug_token = os.path.join("logs", f"roiocr_{int(time.time()*1000)}")
-        data = ocr_full(roi_img, debug_save=debug_token)
-        parsed = parse_item(data)
-        parsed["image_size"] = getattr(roi_img, "size", (0, 0))
-        nbx, nby = parsed.get("name_bbox", (0, 0))
-        parsed["name_bbox"] = (roi_offset[0] + int(nbx), roi_offset[1] + int(nby))
-        parsed["roi"] = {"left": roi_offset[0], "top": roi_offset[1], "size": getattr(roi_img, "size", (0, 0))}
-        parsed["detection"] = get_last_detection_stats()
-        return parsed
-
     def _format_price_value(self, value) -> str:
         if value is None:
             return "—"
@@ -166,15 +149,13 @@ class OCRWorker(QtCore.QObject):
             lines.append(f"{pot} ЛП: {value_txt}")
         return lines
 
-    def update_settings(self, hotkey: str | None = None, inventory_hotkey: str | None = None, capture_hotkey: str | None = None, tesseract_path: str | None = None, template_threshold: float | None = None, save_debug_images: bool | None = None):
+    def update_settings(self, hotkey: str | None = None, inventory_hotkey: str | None = None, capture_hotkey: str | None = None, template_threshold: float | None = None, save_debug_images: bool | None = None):
         if hotkey:
             self.hotkey = hotkey
         if inventory_hotkey:
             self.inventory_hotkey = inventory_hotkey
         if capture_hotkey:
             self.capture_hotkey = capture_hotkey
-        if tesseract_path is not None:
-            self.tesseract_path = tesseract_path
         if template_threshold is not None:
             try:
                 self.template_threshold = float(template_threshold)
@@ -284,12 +265,14 @@ class OCRWorker(QtCore.QObject):
             detect_stats = get_last_detection_stats()
             if detect_stats:
                 self._log.debug("Corner detection stats: %s", detect_stats)
-            # 2) Try template-based match first
+            # 2) Определяем потенциальный ЛП до шаблонов
+            potential, pot_score = detect_potential_global(roi_img)
+            if pot_score:
+                self._log.debug("LP detection score: %.3f for potential %s", pot_score, potential)
+            # 3) Пробуем сопоставить по шаблонам
             match = match_item_by_templates(roi_img)
             if match:
                 item_name, score = match
-                # Detect potential globally via 1lp..4lp templates
-                potential, pot_score = detect_potential_global(roi_img)
                 # Lookup price/comment in DB by name (and potential when set)
                 price_txt = None
                 rec, sc = (None, 0)
@@ -318,8 +301,8 @@ class OCRWorker(QtCore.QObject):
                 self._log.info("Template match %.0f ms: '%s' (score=%.2f, pot=%s)", dt, item_name, score, potential)
                 return
 
-            # 3) No templates — open capture dialog
-            self.status.emit("Шаблон не найден — откроется окно создания шаблонов")
+            # 4) Нет шаблонов — сразу просим пользователя добавить новый
+            self.status.emit("Шаблон не найден — откроется окно создания шаблона")
             try:
                 os.makedirs("logs", exist_ok=True)
                 roi_path = os.path.join("logs", f"roi_{int(time.time()*1000)}.png")
@@ -329,74 +312,15 @@ class OCRWorker(QtCore.QObject):
             except Exception:
                 roi_path = ""
             self.requestTemplate.emit(roi_path)
-
-            parsed = self._ocr_roi(roi_img, roi_offset)
-            detection = parsed.get("detection")
-            if detection:
-                self._log.debug("OCR fallback detection: %s", detection)
-            left, top = parsed.get("name_bbox", (roi_offset[0] + 40, roi_offset[1] + 60))
-            nm = (parsed.get("name", "") or "").strip()
-            lines = parsed.get("lines", [])
-            if nm:
-                lines = [nm] + list(lines)
-            bigrams = []
-            L = min(6, len(lines))
-            for i in range(L - 1):
-                a = lines[i].strip(); b = lines[i + 1].strip()
-                if a and b:
-                    bigrams.append(f"{a} {b}")
-            if bigrams:
-                lines = list(lines) + bigrams
-
-            potential, pot_score = detect_potential_global(roi_img)
-            if pot_score:
-                self._log.debug("LP detection score: %.3f for potential %s", pot_score, potential)
-
-            rec, score = (None, 0)
-            if potential is not None and int(potential or 0) > 0:
-                rec, score = self.db.find_best(lines, threshold=80, potential=int(potential), strict_potential=True)
-            if not rec:
-                rec, score = self.db.find_best(lines, threshold=80, potential=potential)
-            if rec and rec.get("price") is not None:
-                price = rec.get("price")
-                if isinstance(price, (int, float)):
-                    show_txt = f"Цена: {_format_price(price)}"
-                else:
-                    try:
-                        _ = float(str(price).replace(",", "."))
-                        show_txt = f"Цена: {_format_price(price)}"
-                    except Exception:
-                        show_txt = str(price)
-                lp_suffix = f" (ЛП {int(potential)})" if potential is not None else ""
-                msg = f"{nm or '—'}{lp_suffix}"
-                if show_txt:
-                    msg = f"{msg}\n{show_txt}"
-                self.boxReady.emit(msg, left, top)
-                dt = (time.perf_counter() - t0) * 1000
-                self._log.info(
-                    "Fallback OCR %.0f ms; fuzzy=%s%% for '%s' (pot=%s score=%.2f)",
-                    dt,
-                    score,
-                    rec.get('name'),
-                    rec.get('potential'),
-                    pot_score,
-                )
-                return
-            elif rec:
-                lp_suffix = f" (ЛП {int(potential)})" if potential is not None else ""
-                msg = f"{nm or '—'}{lp_suffix}"
-                msg = f"{msg}\nСовпадение без цены"
-                self.boxReady.emit(msg, left, top)
-                self._log.info("Match %s%% for '%s' (pot=%s) but price=None", score, rec.get('name'), rec.get('potential'))
-                return
-
+            # Сообщаем пользователю прямо в игре
             lp_suffix = f" (ЛП {int(potential)})" if potential is not None else ""
-            msg = f"{nm or '—'}{lp_suffix}"
-            msg = f"{msg}\nСовпадений не найдено"
-            self.boxReady.emit(msg, left, top)
-            self._log.info("No match >=80%%. Potential=%s. Lines sample=%s", potential, lines[:3])
+            msg = f"Шаблон не найден{lp_suffix}\nСоздайте новый образец"
+            self.boxReady.emit(msg, roi_offset[0] + 40, roi_offset[1] + 60)
+            dt = (time.perf_counter() - t0) * 1000
+            self._log.info("Template missing %.0f ms; suggested capture dialog", dt)
+            return
 
         except Exception as e:
             traceback.print_exc()
-            self._log.exception("Error during OCR/lookup: %s", e)
-            self.boxReady.emit("OCR ошибка", 40, 40)
+            self._log.exception("Ошибка при обработке шаблонов: %s", e)
+            self.boxReady.emit("Ошибка обработки", 40, 40)

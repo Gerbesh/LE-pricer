@@ -11,7 +11,6 @@ from db import PriceDB
 from gui import MainWindow
 from overlay import PriceOverlay
 from worker import OCRWorker
-from ocr import DEFAULT_TESSERACT_EXE
 from config import load_config
 
 def main():
@@ -43,13 +42,11 @@ def main():
     win.show()
 
     overlay = PriceOverlay(box_duration_ms=overlay_duration, hint_duration_ms=inventory_overlay_duration)
-    # Defaults: hotkey F1, Tesseract at default Windows path
     worker = OCRWorker(
         db,
         hotkey=win.hotkey,
         inventory_hotkey=getattr(win, 'inventoryHotkey', inventory_hotkey),
         capture_hotkey=getattr(win, 'captureHotkey', capture_hotkey),
-        tesseract_path=(win.tessPath.text().strip() or DEFAULT_TESSERACT_EXE),
         template_threshold=float(getattr(win, 'thresholdSpin').value()),
         save_debug_images=bool(getattr(win, 'debugImgCheck').isChecked()),
     )
@@ -72,7 +69,6 @@ def main():
             hotkey=win.hotkeyEdit.text().strip() or "F1",
             inventory_hotkey=getattr(win, "inventoryHotkey", getattr(worker, "inventory_hotkey", "F2")),
             capture_hotkey=getattr(win, "captureHotkey", getattr(worker, "capture_hotkey", "F3")),
-            tesseract_path=win.tessPath.text().strip() or DEFAULT_TESSERACT_EXE,
             template_threshold=float(win.thresholdSpin.value()),
             save_debug_images=bool(win.debugImgCheck.isChecked()),
         )
@@ -80,7 +76,6 @@ def main():
         win.captureHotkey = getattr(worker, "capture_hotkey", win.captureHotkey)
 
     win.hotkeyEdit.editingFinished.connect(apply_settings)
-    win.tessPath.editingFinished.connect(apply_settings)
     win.thresholdSpin.valueChanged.connect(apply_settings)
     # soft OCR removed
 
