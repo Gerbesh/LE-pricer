@@ -1,4 +1,4 @@
-﻿# LE Pricer
+# LE Pricer
 
 Desktop companion app that reads Last Epoch loot tooltips via OCR, looks up prices, and overlays quick hints in-game.
 
@@ -28,21 +28,21 @@ python main.py
 When the UI opens, point Tesseract to the installed binary if auto-detection fails, then calibrate capture templates.
 
 ## Default Hotkeys
-- `F1` – capture the hovered item and show the overlay.
-- `F2` – capture the inventory grid for stash association (if enabled).
-- `F3` – open the template capture dialog for recalibration.
+- `F1` - capture the hovered item and show the overlay.
+- `F2` - capture the inventory grid for stash association (if enabled).
+- `F3` - open the template capture dialog for recalibration.
 Hotkeys are configurable inside the main window and updates apply instantly.
 
 ## Project Layout
-- `main.py` – application entry point, wires UI, worker, overlay, and database together.
-- `gui.py` – PySide6 main window, settings widgets, and data models.
-- `worker.py` – background `OCRWorker` thread that listens for hotkeys and dispatches OCR work.
-- `ocr.py` – screen capture helpers, preprocessing utilities, and Tesseract integration.
-- `overlay.py` – always-on-top widget that shows pricing results in-game.
-- `db.py` – local JSON-backed price store with helper queries and persistence routines.
-- `template_manager.py` – utilities for maintaining capture templates.
-- `prices.json` – sample data bundle used for local testing.
-- `tests/` – pytest-based regression tests (add new ones here).
+- `main.py` - application entry point, wires UI, worker, overlay, and database together.
+- `gui.py` - PySide6 main window, settings widgets, and data models.
+- `worker.py` - background `OCRWorker` thread that listens for hotkeys and dispatches OCR work.
+- `ocr.py` - screen capture helpers, preprocessing utilities, and Tesseract integration.
+- `overlay.py` - always-on-top widget that shows pricing results in-game.
+- `db.py` - local JSON-backed price store with helper queries and persistence routines.
+- `template_manager.py` - utilities for maintaining capture templates.
+- `prices.json` - sample data bundle used for local testing.
+- `tests/` - pytest-based regression tests (add new ones here).
 
 ## Development
 - Lint: `ruff .` or `flake8 .` (optional but recommended).
@@ -53,7 +53,7 @@ Hotkeys are configurable inside the main window and updates apply instantly.
 ## Troubleshooting
 - **Hotkeys ignored:** ensure the app runs with sufficient privileges (try "Run as administrator" on Windows) and no other tool grabs the same hotkeys.
 - **OCR misses characters:** verify the correct language packs are installed and re-run template calibration with a crisp tooltip screenshot.
-- **Overlay not visible:** confirm Last Epoch uses windowed/borderless mode so the overlay can be drawn on top.
+- **Overlay not visible:** confirm Last Epoch uses windowed or borderless mode so the overlay can be drawn on top.
 
 ## License
 The project is distributed under the MIT License. See `LICENSE` if supplied with the release.
