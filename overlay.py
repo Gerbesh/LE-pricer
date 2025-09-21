@@ -8,20 +8,33 @@ PRICE_THRESHOLD = 100000
 def _extract_value(line: str) -> int | None:
     if not line:
         return None
-    cleaned = str(line).replace(' ', ' ')
-    match = VALUE_RE.search(cleaned)
-    if not match:
+    cleaned = str(line).replace('\u00a0', ' ')
+    matches = list(VALUE_RE.finditer(cleaned))
+    if not matches:
         return None
-    fragment = match.group()
-    negative = fragment.strip().startswith('-')
-    digits = ''.join(ch for ch in fragment if ch.isdigit())
-    if not digits:
-        return None
-    try:
-        value = int(digits)
-    except Exception:
-        return None
-    return -value if negative else value
+    colon_index = cleaned.find(':')
+    best_value: int | None = None
+    best_score = -1
+    for match in matches:
+        if colon_index != -1 and match.end() <= colon_index:
+            continue
+        fragment = match.group()
+        negative = fragment.strip().startswith('-')
+        digits = ''.join(ch for ch in fragment if ch.isdigit())
+        if not digits:
+            continue
+        score = len(digits)
+        if score < 3:
+            # короткие последовательности цифр больше похожи на индексы ("0 ЛП") или цифры в названии
+            continue
+        try:
+            value = int(digits)
+        except Exception:
+            continue
+        if score > best_score or (score == best_score and best_value is None):
+            best_value = -value if negative else value
+            best_score = score
+    return best_value
 
 
 def _line_color(value: int | None, threshold: int, original: str | None = None) -> QtGui.QColor:
@@ -30,7 +43,7 @@ def _line_color(value: int | None, threshold: int, original: str | None = None) 
             lowered = original.lower()
             if 'нет' in lowered or 'unknown' in lowered or 'нет ' in lowered or ' no ' in lowered:
                 return QtGui.QColor(210, 82, 82, 185)
-        return QtGui.QColor(90, 100, 120, 150)
+        return QtGui.QColor(110, 120, 140, 160)
     if value >= threshold:
         return QtGui.QColor(68, 170, 108, 185)
     return QtGui.QColor(210, 82, 82, 185)
@@ -56,6 +69,8 @@ class HintWindow(QtWidgets.QWidget):
         self._font = QtGui.QFont("Segoe UI", 10)
         self._padding = 10
         self._text_margin = 12
+        self._bubble_padding_x = 10
+        self._bubble_padding_y = 2
         self._threshold = threshold
         self._line_layout: list[dict[str, object]] = []
         self._configure_geometry(rect)
@@ -73,8 +88,15 @@ class HintWindow(QtWidgets.QWidget):
         metrics = QtGui.QFontMetrics(self._font)
         text_width = max((metrics.horizontalAdvance(line) for line in self._lines), default=0)
         line_spacing = metrics.lineSpacing()
-        content_width = max(width, text_width + self._text_margin * 2)
-        content_height = max(height, line_spacing * max(1, len(self._lines)) + self._text_margin * 2)
+        lines_count = max(1, len(self._lines))
+        content_width = max(
+            width,
+            text_width + self._text_margin * 2 + self._bubble_padding_x * 2,
+        )
+        content_height = max(
+            height,
+            line_spacing * lines_count + self._text_margin * 2 + self._bubble_padding_y * 2,
+        )
         self._highlight_rect = QtCore.QRect(self._padding, self._padding, content_width, content_height)
         geom = QtCore.QRect(
             left - self._padding,
@@ -87,21 +109,25 @@ class HintWindow(QtWidgets.QWidget):
 
     def _build_line_layout(self, metrics: QtGui.QFontMetrics) -> None:
         line_spacing = metrics.lineSpacing()
+        line_height = metrics.ascent() + metrics.descent()
         inner_left = self._highlight_rect.left() + self._text_margin
         inner_width = max(40, self._highlight_rect.width() - self._text_margin * 2)
-        y = self._highlight_rect.top() + self._text_margin
+        baseline = self._highlight_rect.top() + self._text_margin + metrics.ascent() + self._bubble_padding_y
         layout: list[dict[str, object]] = []
         for line in self._lines:
-            rect = QtCore.QRect(inner_left, y - metrics.ascent() - 6, inner_width, line_spacing + 12)
-            baseline = y + metrics.ascent()
+            text_width = metrics.horizontalAdvance(line)
+            bubble_width = min(inner_width, max(text_width + self._bubble_padding_x * 2, 36))
+            top = int(baseline - metrics.ascent() - self._bubble_padding_y)
+            rect = QtCore.QRect(inner_left, top, bubble_width, line_height + self._bubble_padding_y * 2)
             value = _extract_value(line)
             layout.append({
                 "text": line,
                 "rect": rect,
-                "baseline": baseline,
+                "baseline": int(baseline),
+                "text_x": rect.left() + self._bubble_padding_x,
                 "color": _line_color(value, self._threshold, line),
             })
-            y += line_spacing
+            baseline += line_spacing
         self._line_layout = layout
 
     def paintEvent(self, event):
@@ -123,9 +149,9 @@ class HintWindow(QtWidgets.QWidget):
         painter.setFont(self._font)
         painter.setPen(QtGui.QColor(255, 255, 255))
         for entry in self._line_layout:
-            rect = entry["rect"]
             baseline = entry["baseline"]
-            painter.drawText(rect.left() + 8, int(baseline), entry["text"])  # type: ignore[arg-type]
+            text_x = entry["text_x"]
+            painter.drawText(int(text_x), int(baseline), entry["text"])  # type: ignore[arg-type]
 
 
 class PriceOverlay(QtWidgets.QWidget):
@@ -141,9 +167,11 @@ class PriceOverlay(QtWidgets.QWidget):
         self._font = QtGui.QFont("Segoe UI", 12, QtGui.QFont.DemiBold)
         self._padding = 12
         self._text_margin = 14
+        self._bubble_padding_x = 10
+        self._bubble_padding_y = 2
         self._lines: list[str] = []
         self._highlight_rect = QtCore.QRect(self._padding, self._padding, 220, 56)
-        self._line_layout: list[tuple[str, QtCore.QRect, int, QtGui.QColor]] = []
+        self._line_layout: list[dict[str, object]] = []
         self._layout_dirty = False
         self._box_duration_ms = max(500, int(box_duration_ms))
         self._hint_duration_ms = max(500, int(hint_duration_ms))
@@ -158,8 +186,12 @@ class PriceOverlay(QtWidgets.QWidget):
         metrics = QtGui.QFontMetrics(self._font)
         text_width = max((metrics.horizontalAdvance(line) for line in self._lines), default=0)
         line_spacing = metrics.lineSpacing()
-        highlight_w = max(240, text_width + self._text_margin * 2)
-        highlight_h = max(line_spacing + self._text_margin * 2, line_spacing * len(self._lines) + self._text_margin * 2)
+        lines_count = max(1, len(self._lines))
+        highlight_w = max(240, text_width + self._text_margin * 2 + self._bubble_padding_x * 2)
+        highlight_h = max(
+            line_spacing + self._text_margin * 2 + self._bubble_padding_y * 2,
+            line_spacing * lines_count + self._text_margin * 2 + self._bubble_padding_y * 2,
+        )
         widget_w = highlight_w + self._padding * 2
         widget_h = highlight_h + self._padding * 2
         top = max(5, y - highlight_h - self._padding)
@@ -207,16 +239,27 @@ class PriceOverlay(QtWidgets.QWidget):
             return
         metrics = QtGui.QFontMetrics(self._font)
         line_spacing = metrics.lineSpacing()
+        line_height = metrics.ascent() + metrics.descent()
         inner_left = self._highlight_rect.left() + self._text_margin
         inner_width = max(40, self._highlight_rect.width() - self._text_margin * 2)
-        y = self._highlight_rect.top() + self._text_margin
-        layout: list[tuple[str, QtCore.QRect, int, QtGui.QColor]] = []
+        baseline = self._highlight_rect.top() + self._text_margin + metrics.ascent() + self._bubble_padding_y
+        layout: list[dict[str, object]] = []
         for line in self._lines:
-            rect = QtCore.QRect(inner_left, y - metrics.ascent() - 6, inner_width, line_spacing + 12)
-            baseline = y + metrics.ascent()
+            text_width = metrics.horizontalAdvance(line)
+            bubble_width = min(inner_width, max(text_width + self._bubble_padding_x * 2, 36))
+            top = int(baseline - metrics.ascent() - self._bubble_padding_y)
+            rect = QtCore.QRect(inner_left, top, bubble_width, line_height + self._bubble_padding_y * 2)
             color = _line_color(_extract_value(line), self._price_threshold, line)
-            layout.append((line, rect, int(baseline), color))
-            y += line_spacing
+            layout.append(
+                {
+                    "text": line,
+                    "rect": rect,
+                    "baseline": int(baseline),
+                    "text_x": rect.left() + self._bubble_padding_x,
+                    "color": color,
+                }
+            )
+            baseline += line_spacing
         self._line_layout = layout
         self._layout_dirty = False
 
@@ -231,11 +274,13 @@ class PriceOverlay(QtWidgets.QWidget):
         painter.setBrush(QtGui.QColor(20, 24, 34, 225))
         painter.setPen(QtGui.QPen(QtGui.QColor(120, 180, 255, 170), 1.6))
         painter.drawRoundedRect(self._highlight_rect, 14, 14)
-        for line, rect, baseline, color in self._line_layout:
+        for entry in self._line_layout:
+            rect = entry["rect"]
+            color = entry["color"]
             painter.setBrush(color)
             painter.setPen(QtCore.Qt.NoPen)
             painter.drawRoundedRect(rect, 8, 8)
         painter.setFont(self._font)
         painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255)))
-        for line, rect, baseline, color in self._line_layout:
-            painter.drawText(rect.left() + 10, baseline, line)
+        for entry in self._line_layout:
+            painter.drawText(int(entry["text_x"]), int(entry["baseline"]), entry["text"])  # type: ignore[arg-type]

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+-## 0.0.5 - 2025-09-21
+- Улучшена подсветка оверлея: значения ЛП анализируются корректно, и строки с ценой выше 100 000 теперь окрашиваются в зелёный цвет.
+- Сдвиг фона текста исправлен — плашки под строками выравниваются вплотную к глифам.
+- Названия предметов больше не подсвечиваются красным, если в строке нет цены.
+- Подсказки по инвентарю ограничены максимум тремя экземплярами одного предмета.
+
 ## 0.0.4 - 2025-09-21
 - Added config-driven hotkeys and overlay lifetimes with default duration extended to four seconds.
 - Redesigned overlay visuals with per-line highlights that colour-code values above or below 100 000.

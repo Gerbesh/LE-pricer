@@ -42,6 +42,24 @@ def _format_price(value) -> str:
     out = ip_g if not fp else f"{ip_g},{fp}"
     return f"-{out}" if neg else out
 
+
+def _limit_inventory_duplicates(hints: list[dict[str, object]], per_item: int = 3) -> list[dict[str, object]]:
+    order: list[str] = []
+    buckets: dict[str, list[dict[str, object]]] = {}
+    for hint in hints:
+        item_name = str(hint.get("item") or "").strip()
+        key = item_name.lower()
+        if key not in buckets:
+            buckets[key] = []
+            order.append(key)
+        buckets[key].append(hint)
+    limited: list[dict[str, object]] = []
+    for key in order:
+        items = buckets.get(key) or []
+        items.sort(key=lambda h: float(h.get("score") or 0.0), reverse=True)
+        limited.extend(items[: max(0, per_item)])
+    return limited
+
 class OCRWorker(QtCore.QObject):
     boxReady = QtCore.Signal(str, int, int)  # text, x, y
     status = QtCore.Signal(str)
@@ -241,6 +259,7 @@ class OCRWorker(QtCore.QObject):
                     match.get("score", 0.0),
                     global_rect,
                 )
+            hints = _limit_inventory_duplicates(hints)
             if hints:
                 self.inventoryReady.emit(hints)
                 self.status.emit(f"Найдено {len(hints)} предмет(ов) в инвентаре")
