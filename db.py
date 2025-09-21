@@ -32,7 +32,7 @@ _SHAPE_MAP = str.maketrans({
     # Latin to Latin (identity) for completeness
     'A':'A','B':'B','C':'C','E':'E','H':'H','K':'K','M':'M','O':'O','P':'P','T':'T','X':'X','Y':'Y','W':'W',
     'a':'a','b':'b','c':'c','e':'e','h':'h','k':'k','m':'m','o':'o','p':'p','t':'t','x':'x','y':'y','w':'w',
-    # Common OCR digit confusions
+    # Частые смешения символов (цифры и буквы похожей формы)
     '0':'o','3':'e','4':'a','6':'b','8':'b'
 })
 

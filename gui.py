@@ -3,7 +3,7 @@ import os
 import math
 import logging
 from PySide6 import QtCore, QtWidgets, QtGui
-from ocr import DEFAULT_TESSERACT_EXE, _template_threshold_default
+from ocr import _template_threshold_default
 from template_manager import save_samples, save_inventory_sample
 from db import PriceDB
 
@@ -116,7 +116,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Controls
         top = QtWidgets.QHBoxLayout()
         self.hotkeyEdit = QtWidgets.QLineEdit(self.hotkey)
-        self.tessPath = QtWidgets.QLineEdit(DEFAULT_TESSERACT_EXE)
         applyBtn = QtWidgets.QPushButton("Применить")
         self.debugImgCheck = QtWidgets.QCheckBox("Логировать картинки")
         self.debugImgCheck.setChecked(False)
@@ -127,10 +126,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.thresholdSpin.setSingleStep(0.01)
         self.thresholdSpin.setDecimals(2)
         self.thresholdSpin.setValue(_template_threshold_default())
-        top.addWidget(QtWidgets.QLabel("Hotkey:"))
+        top.addWidget(QtWidgets.QLabel("Горячая клавиша:"))
         top.addWidget(self.hotkeyEdit, 0)
-        top.addWidget(QtWidgets.QLabel("Путь к Tesseract:"))
-        top.addWidget(self.tessPath, 1)
         top.addWidget(self.thresholdSpin, 0)
         top.addWidget(self.debugImgCheck, 0)
         top.addWidget(applyBtn)
@@ -184,7 +181,7 @@ class MainWindow(QtWidgets.QMainWindow):
         thr = self.thresholdSpin.value()
         dbg = 'on' if self.debugImgCheck.isChecked() else 'off'
         self.status.showMessage(
-            f"Hotkeys: OCR {self.hotkey} | Инвентарь: {self.inventoryHotkey} | Захват: {self.captureHotkey} | Tesseract: {self.tessPath.text().strip() or '(PATH)'} | Порог рамки: {thr:.2f} | Картинки: {dbg}",
+            f"Горячие клавиши: предмет {self.hotkey} | инвентарь {self.inventoryHotkey} | шаблон {self.captureHotkey} | Порог рамки: {thr:.2f} | Картинки: {dbg}",
             4000,
         )
 

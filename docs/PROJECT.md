@@ -1,50 +1,51 @@
-﻿# Project Documentation
+# Документация проекта
 
-## System Overview
-LE Pricer is a desktop helper for Last Epoch players. It listens for configurable hotkeys, captures the game window, extracts text through OCR, and overlays pricing tips pulled from a local JSON database. The app is split across three cooperating components:
+## Обзор системы
+LE Pricer помогает игрокам Last Epoch быстро оценивать предметы. Приложение состоит из трёх ключевых компонентов:
 
-1. **GUI (`gui.MainWindow`)** – Presents configuration, price tables, and template management. Emits signals for worker actions and reflects worker status updates.
-2. **Worker (`worker.OCRWorker`)** – Runs in the background thread, subscribes to global hotkeys, performs screenshot capture, runs OCR via `ocr.py`, and pushes results back to the GUI.
-3. **Overlay (`overlay.PriceOverlay`)** – A frameless, always-on-top window bound to the worker for lightweight in-game hints.
+1. **GUI (`gui.MainWindow`)** — основное окно PySide6. Позволяет редактировать базу цен, управлять горячими клавишами и инициировать захват шаблонов.
+2. **Worker (`worker.OCRWorker`)** — фоновый объект Qt, который слушает глобальные горячие клавиши, захватывает экран и сопоставляет подсказку с шаблонами. В нынешней версии OCR отсутствует: всё завязано на шаблонном распознавании и данные из базы.
+3. **Overlay (`overlay.PriceOverlay`)** — всегда поверх всех окон. Получает сигналы от воркера и показывает текстовые подсказки в игре.
 
-## Key Workflows
-### Hotkey Capture
-1. The user presses the main capture hotkey (default `F1`).
-2. `OCRWorker` captures the target region using template metadata from `template_manager.py`.
-3. `ocr.parse_item` (see `ocr.py`) preprocesses and feeds the image to Tesseract.
-4. Parsed item data is sent to `db.PriceDB.lookup_price` to resolve known values.
-5. The worker emits `boxReady` with overlay payload and `status` messages for the GUI.
+## Основные сценарии
+### Оценка предмета
+1. Пользователь нажимает горячую клавишу (по умолчанию `F1`).
+2. `OCRWorker` захватывает весь экран и определяет координаты подсказки по угловым шаблонам.
+3. Модуль `template_manager` возвращает наилучшее совпадение по имени предмета. Дополнительно определяется легендарный потенциал с помощью глобальных шаблонов `1lp.png`–`4lp.png`.
+4. `PriceDB` ищет цену и комментарии, после чего воркер отправляет сигнал `boxReady` в оверлей.
+5. Оверлей отображает две строки: название предмета (с ЛП, если найден) и цену либо пометку о её отсутствии.
 
-### Template Calibration
-- Initiated via GUI actions (`MainWindow._open_template_capture`).
-- Delegates to `template_manager.py` routines for storing raw template captures and serialization.
-- Updated templates are written under `templates/` (ignored in Git) so local customizations stay outside version control.
+Если шаблон не найден, воркер сразу открывает диалог захвата нового образца и выводит статус «Шаблон не найден — откроется окно создания шаблона».
 
-### Data Management
-- `PriceDB` uses `prices.json` as the primary store and persists user edits to disk.
-- The module exposes high-level helpers (`add_price`, `update_item`, `list_known`) to keep GUI logic lean.
+### Захват шаблона
+- Запускается кнопкой в GUI или горячей клавишей (по умолчанию `F3`).
+- `OCRWorker` делает скриншот, сохраняет его в `logs/` и передаёт пути в GUI.
+- Пользователь выделяет рамку, выбирает предмет из списка и сохраняет шаблон через `template_manager`.
 
-## Configuration & Persistence
-- Runtime settings (hotkeys, threshold, debug flags) are owned by the GUI and relayed to the worker via `OCRWorker.update_settings`.
-- Logs are written to `logs/app.log` with rotation handled externally (delete folder to reset).
-- Templates and debug captures live in `templates/` and `logs/debug/` respectively; both are ignored by Git to avoid leaking personal captures.
+### Управление базой цен
+- Таблица «Цены» в GUI позволяет редактировать записи и добавлять новые строки.
+- Все изменения сохраняются в `prices.json`. Файл обновляется под блокировкой, чтобы избежать конфликтов при одновременных операциях.
 
-## Error Handling Strategy
-- User-facing messages go through `MainWindow.statusMsg` so the GUI remains responsive.
-- Exceptions in the worker trigger `status` updates and are also logged for diagnostics.
-- OCR failures fall back to informative overlay messages rather than raising.
+## Конфигурация и сохранение
+- Настройки (горячие клавиши, параметры оверлея) читаются и сохраняются через `config.py` в `%APPDATA%/Pricer` (Windows) или `~/.local/share/pricer` (Linux).
+- Шаблоны и логи хранятся рядом с исполняемым файлом; они игнорируются Git-репозиторием.
 
-## Development Notes
-- The app targets Python 3.12; enforce it via `main.MIN_PYTHON`.
-- Prefer type hints on public functions (`db.py`, `worker.py`) so static analysis is easier.
-- Keep modules import-light to avoid circular dependencies: GUI ↔ worker by signals, worker ↔ overlay only through Qt signals.
-- Tests belong in `tests/` and should mirror module names (`tests/test_db.py`, etc.). Add `pytest` to dependencies when introducing automated checks.
+## Обработка ошибок
+- Воркер сообщает о каждом шаге через сигнал `status`, чтобы GUI показывал понятные сообщения.
+- Исключения логируются и приводят к уведомлению «Ошибка обработки» в оверлее, но не блокируют приложение.
+- При отсутствии шаблона пользователю сразу предлагается его создать — нет попыток распознавать текст.
 
-## Release Checklist
-- Regenerate templates on the target machine and verify OCR against representative items.
-- Clear `logs/` and `templates/` before packaging a build.
-- Bump version metadata inside `config.py` or dedicated release notes if present.
-- Capture fresh screenshots for documentation (see `docs/` or README gallery section if added).
+## Советы по разработке
+- Поддерживайте Python 3.12+: это зафиксировано в `main.MIN_PYTHON`.
+- Используйте типы и мелкие функции-хелперы, чтобы не перегружать GUI-слой.
+- Новые тесты размещайте в `tests/`, придерживаясь схемы `test_<module>.py`.
+- При отладке включайте сохранение диагностических кадров (`debugImgCheck`) — они помогают анализировать совпадение шаблонов.
 
-## License
-Distributed under MIT unless overridden for a specific release. Ensure no proprietary fonts, captures, or account data leave the local machine.
+## Чек-лист перед релизом
+- Переснять угловые шаблоны на целевой машине и убедиться, что рамка находится стабильно.
+- Очистить `logs/` перед упаковкой сборки.
+- Обновить `CHANGELOG.md` и `VERSION`.
+- Проверить, что скрипты в `scripts/` успешно запускают приложение и сборку без упоминаний Tesseract.
+
+## Лицензия
+Проект распространяется под лицензией MIT (если файл `LICENSE` приложен к релизу).

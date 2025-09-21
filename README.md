@@ -1,72 +1,68 @@
-﻿# LE Pricer
+# LE Pricer
 
-Desktop companion app that reads Last Epoch loot tooltips via OCR, looks up prices, and overlays quick hints in-game.
+Настольное приложение для игроков Last Epoch. Оно слушает глобальные горячие клавиши, делает снимок области подсказки предмета, сопоставляет её с сохранёнными шаблонами и показывает цену из локальной базы прямо поверх игры.
 
-## Highlights
-- OCR pipeline powered by Tesseract to extract item names and affix tiers from screenshots.
-- PySide6 desktop UI for managing price data, capture hotkeys, and template calibration.
-- Lightweight overlay panel that mirrors price lookup results without blocking the game.
-- Background worker that listens for global hotkeys so OCR runs outside the GUI thread.
+## Основные возможности
+- Захват экрана и распознавание рамки подсказки по заранее снятым шаблонам без использования OCR.
+- Автоматический поиск цены в локальной базе `prices.json` с учётом легендарного потенциала.
+- Настраиваемые горячие клавиши для оценки предмета, сканирования инвентаря и ручного снятия новых шаблонов.
+- Интерактивный GUI на PySide6 для редактирования цен и управления шаблонами.
+- Оверлей, который отображает подсказку с ценой и данными по ЛП, не блокируя игру.
 
-## Getting Started
-### Prerequisites
-- Python 3.12 or newer (`python --version`).
-- Tesseract OCR installed with English and Russian language packs. On Windows, prefer the UB Mannheim build and add `tesseract.exe` to `%PATH%`.
+## Требования
+- Python 3.12 или новее (`python --version`).
+- Windows 10/11 или Linux с поддержкой PySide6 и OpenCV.
 
-### Installation
+## Установка
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
-On macOS/Linux replace the second line with `source .venv/bin/activate`.
+На macOS/Linux замените вторую строку на `source .venv/bin/activate`.
 
-### First Run
+## Первый запуск
 ```powershell
 python main.py
 ```
-When the UI opens, point Tesseract to the installed binary if auto-detection fails, then calibrate capture templates.
+Откроется главное окно. Проверьте горячие клавиши и, при необходимости, переснимите шаблоны рамки подсказки (кнопка/горячая клавиша по умолчанию `F3`).
 
-## Default Hotkeys
-- `F1` - capture the hovered item and show the overlay.
-- `F2` - capture the inventory grid for stash association (if enabled).
-- `F3` - open the template capture dialog for recalibration.
-Hotkeys are configurable inside the main window and updates apply instantly.
+## Горячие клавиши по умолчанию
+- `F1` — определить текущий предмет и показать оверлей.
+- `F2` — просканировать инвентарь и вывести подсказки по найденным предметам.
+- `F3` — запустить диалог захвата шаблона.
 
-## Project Layout
-- `main.py` - application entry point, wires UI, worker, overlay, and database together.
-- `gui.py` - PySide6 main window, settings widgets, and data models.
-- `worker.py` - background `OCRWorker` thread that listens for hotkeys and dispatches OCR work.
-- `ocr.py` - screen capture helpers, preprocessing utilities, and Tesseract integration.
-- `overlay.py` - always-on-top widget that shows pricing results in-game.
-- `db.py` - local JSON-backed price store with helper queries and persistence routines.
-- `template_manager.py` - utilities for maintaining capture templates.
-- `prices.json` - sample data bundle used for local testing.
-- `tests/` - pytest-based regression tests (add new ones here).
+Горячие клавиши можно менять в верхней панели окна; изменения применяются немедленно.
 
-## Development
-- Lint: `ruff .` or `flake8 .` (optional but recommended).
-- Format: `ruff format .` or `black .`.
-- Tests: `pytest -q` (add `pytest` to `requirements.txt` if needed).
-- Logs are written to `logs/app.log`; delete the folder to reset between runs.
+## Структура проекта
+- `main.py` — точка входа, соединяет GUI, рабочий поток и оверлей.
+- `gui.py` — главное окно PySide6 с таблицами цен и управлением шаблонами.
+- `worker.py` — фоновой поток, слушает горячие клавиши и обрабатывает скриншоты.
+- `ocr.py` — вспомогательные функции захвата экрана и обнаружения рамки (только шаблоны, без OCR).
+- `overlay.py` — виджет оверлея с подсказками.
+- `db.py` — работа с JSON-базой цен.
+- `template_manager.py` — менеджер шаблонов предметов и ЛП.
+- `prices.json` — пример базы для тестов.
+- `tests/` — автотесты на pytest.
 
-## Troubleshooting
-- **Hotkeys ignored:** ensure the app runs with sufficient privileges (try "Run as administrator" on Windows) and no other tool grabs the same hotkeys.
-- **OCR misses characters:** verify the correct language packs are installed and re-run template calibration with a crisp tooltip screenshot.
-- **Overlay not visible:** confirm Last Epoch uses windowed or borderless mode so the overlay can be drawn on top.
+## Разработка
+- Линтер: `ruff .` или `flake8 .`.
+- Форматирование: `ruff format .` или `black .`.
+- Тесты: `pytest -q`.
+- Логи пишутся в `logs/app.log`; при необходимости удалите папку, чтобы очистить историю.
 
-## FAQ
+## Решение проблем
+- **Горячие клавиши не работают.** Запустите приложение от имени администратора и убедитесь, что другие программы не перехватывают те же комбинации.
+- **Шаблон не находится.** Снимите новый шаблон рамки (`F3`) и проверьте, что изображение предмета чёткое.
+- **Оверлей не виден.** Переключите игру в оконный или пограничный режим, чтобы оверлей мог отрисоваться поверх.
+- **Цена не найдена.** Убедитесь, что предмет есть в `prices.json`, или добавьте его вручную через таблицу «Цены».
 
-### English
-**How do I change the capture hotkeys?** Use the main window inputs under the Hotkeys section; edits apply immediately to the background worker.
-**Where do I point the app to Tesseract?** Set the executable path in the Tesseract field on the main screen; leave blank for the default installer path.
-**How do I recalibrate templates?** Press F3 or use the template capture button; select the item name box and save the sample.
+## ЧаВо
+**Как изменить горячие клавиши?** Введите нужные значения в полях верхней панели — изменения применяются сразу.
 
-### Часто задаваемые вопросы (RU)
-**Как изменить горячие клавиши?** Откройте главное окно и обновите поля горячих клавиш; изменения сразу применяются к фоновому сервису.
-**Где указать путь к Tesseract?** Введите путь к `tesseract.exe` в поле "Tesseract" на главном экране или оставьте его пустым для значения по умолчанию.
-**Как переснять шаблоны предметов?** Нажмите F3 или кнопку захвата шаблонов, выделите рамкой название предмета и сохраните образец.
+**Как переснять шаблон?** Нажмите `F3` (или выбранную горячую клавишу). В открывшемся окне выделите рамку подсказки предмета и выберите имя из списка.
 
-## License
-The project is distributed under the MIT License. See `LICENSE` if supplied with the release.
+**Можно ли использовать приложение без окна?** Да. Оставьте приложение свёрнутым: фоновой поток продолжит слушать горячие клавиши и показывать оверлей.
 
+## Лицензия
+Проект распространяется под лицензией MIT. Если в релиз входит файл `LICENSE`, изучите его перед распространением.
