@@ -96,13 +96,13 @@ class MainWindow(QtWidgets.QMainWindow):
     showBox = QtCore.Signal(str, int, int)
     statusMsg = QtCore.Signal(str)
 
-    def __init__(self, db: PriceDB, start_hotkey: str = "F1"):
+    def __init__(self, db: PriceDB, start_hotkey: str = "F1", inventory_hotkey: str = "F2", capture_hotkey: str = "F3"):
         super().__init__()
         self.setWindowTitle("LE Item Pricer")
         self.db = db
         self.hotkey = start_hotkey
-        self.inventoryHotkey = "F2"
-        self.captureHotkey = "F3"
+        self.inventoryHotkey = inventory_hotkey
+        self.captureHotkey = capture_hotkey
         self._build_ui()
         self.resize(780, 520)
         # hook placeholder for worker signal later
@@ -180,7 +180,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusMsg.connect(self.status.showMessage)
 
     def _apply_settings(self):
-        self.hotkey = self.hotkeyEdit.text().strip() or "F8"
+        self.hotkey = self.hotkeyEdit.text().strip() or self.hotkey
         thr = self.thresholdSpin.value()
         dbg = 'on' if self.debugImgCheck.isChecked() else 'off'
         self.status.showMessage(
@@ -285,14 +285,17 @@ class ImageSelectWidget(QtWidgets.QLabel):
         self.setSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         self._orig_pixmap = pixmap
         self._scale = 1.0
-        self._rb = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Rectangle, self)
-        self._origin: QtCore.QPoint | None = None
+        self._selection_rect = QtCore.QRect()
         self._enabled = False
+        self._dragging = False
+        self._origin: QtCore.QPoint | None = None
         self._scroll_area: QtWidgets.QScrollArea | None = None
         self._pan_active = False
         self._pan_start = QtCore.QPoint()
         self._scroll_start = QtCore.QPoint()
+        self._blur_pixmap: QtGui.QPixmap | None = None
         self._apply_scale()
+        self._generate_blur_pixmap()
 
     def _apply_scale(self) -> None:
         if self._orig_pixmap.isNull():
@@ -308,11 +311,52 @@ class ImageSelectWidget(QtWidgets.QLabel):
         super().setPixmap(scaled)
         self.resize(scaled.size())
         self.updateGeometry()
-        if self._scroll_area is not None:
-            self._scroll_area.widget().adjustSize()
+
+    def _generate_blur_pixmap(self) -> None:
+        pix = self.pixmap()
+        if pix is None or pix.isNull():
+            self._blur_pixmap = None
+            return
+        scene = QtWidgets.QGraphicsScene()
+        item = QtWidgets.QGraphicsPixmapItem(pix)
+        blur = QtWidgets.QGraphicsBlurEffect()
+        blur.setBlurRadius(12.0)
+        item.setGraphicsEffect(blur)
+        scene.addItem(item)
+        result = QtGui.QPixmap(pix.size())
+        result.fill(QtCore.Qt.transparent)
+        painter = QtGui.QPainter(result)
+        scene.render(painter, QtCore.QRectF(result.rect()), QtCore.QRectF(pix.rect()))
+        painter.end()
+        self._blur_pixmap = result
 
     def set_scroll_area(self, area: QtWidgets.QScrollArea | None) -> None:
         self._scroll_area = area
+
+    def set_scale(self, scale: float) -> None:
+        scale = max(0.1, min(3.0, float(scale)))
+        if abs(scale - self._scale) < 1e-3:
+            return
+        self._scale = scale
+        self._apply_scale()
+        self._generate_blur_pixmap()
+        self._selection_rect = QtCore.QRect()
+        self.update()
+
+    def current_scale(self) -> float:
+        return self._scale
+
+    def start(self):
+        self._enabled = True
+        self._dragging = False
+        self._selection_rect = QtCore.QRect()
+        self.update()
+
+    def stop(self):
+        self._enabled = False
+        self._dragging = False
+        self._selection_rect = QtCore.QRect()
+        self.update()
 
     def mousePressEvent(self, e):
         if e.button() == QtCore.Qt.MouseButton.RightButton and self._scroll_area is not None:
@@ -327,9 +371,10 @@ class ImageSelectWidget(QtWidgets.QLabel):
             return
         if not self._enabled or e.button() != QtCore.Qt.MouseButton.LeftButton:
             return
+        self._dragging = True
         self._origin = e.pos()
-        self._rb.setGeometry(QtCore.QRect(self._origin, QtCore.QSize()))
-        self._rb.show()
+        self._selection_rect = QtCore.QRect(self._origin, QtCore.QSize())
+        self.update()
 
     def mouseMoveEvent(self, e):
         if self._pan_active and self._scroll_area is not None:
@@ -338,10 +383,14 @@ class ImageSelectWidget(QtWidgets.QLabel):
             self._scroll_area.verticalScrollBar().setValue(self._scroll_start.y() - delta.y())
             e.accept()
             return
-        if not self._enabled or self._origin is None:
+        if not self._enabled or not self._dragging or self._origin is None:
             return
         rect = QtCore.QRect(self._origin, e.pos()).normalized()
-        self._rb.setGeometry(rect)
+        pix = self.pixmap()
+        if pix is not None and not pix.isNull():
+            rect = rect.intersected(pix.rect())
+        self._selection_rect = rect
+        self.update()
 
     def mouseReleaseEvent(self, e):
         if e.button() == QtCore.Qt.MouseButton.RightButton and self._pan_active:
@@ -349,27 +398,18 @@ class ImageSelectWidget(QtWidgets.QLabel):
             self.unsetCursor()
             e.accept()
             return
-        if not self._enabled or self._origin is None or e.button() != QtCore.Qt.MouseButton.LeftButton:
+        if not self._enabled or e.button() != QtCore.Qt.MouseButton.LeftButton or self._origin is None:
             return
         rect = QtCore.QRect(self._origin, e.pos()).normalized()
-        self._rb.hide()
+        pix = self.pixmap()
+        if pix is not None and not pix.isNull():
+            rect = rect.intersected(pix.rect())
+        self._selection_rect = rect
+        self._dragging = False
         self._enabled = False
         self._origin = None
-        scale = self._scale if self._scale else 1.0
-        orig_width = self._orig_pixmap.width()
-        orig_height = self._orig_pixmap.height()
-        x1 = max(0, int(math.floor(rect.left() / scale)))
-        y1 = max(0, int(math.floor(rect.top() / scale)))
-        x2 = max(0, int(math.ceil((rect.right() + 1) / scale) - 1))
-        y2 = max(0, int(math.ceil((rect.bottom() + 1) / scale) - 1))
-        x2 = min(orig_width - 1, x2)
-        y2 = min(orig_height - 1, y2)
-        if x2 <= x1:
-            x2 = min(orig_width - 1, x1 + 1)
-        if y2 <= y1:
-            y2 = min(orig_height - 1, y1 + 1)
-        orig_rect = QtCore.QRect(QtCore.QPoint(x1, y1), QtCore.QPoint(x2, y2))
-        self.rectSelected.emit(orig_rect)
+        self.update()
+        self._emit_selection()
 
     def leaveEvent(self, e):
         if self._pan_active:
@@ -377,79 +417,50 @@ class ImageSelectWidget(QtWidgets.QLabel):
             self._pan_active = False
         super().leaveEvent(e)
 
-    def set_scale(self, scale: float) -> None:
-        scale = max(0.1, min(3.0, float(scale)))
-        if abs(scale - self._scale) < 1e-3:
-            return
-        self._scale = scale
-        self._apply_scale()
-        self._rb.hide()
-        self._origin = None
+    def _emit_selection(self) -> None:
+        mapped = self._map_to_original(self._selection_rect)
+        if mapped is not None:
+            self.rectSelected.emit(mapped)
 
-    def current_scale(self) -> float:
-        return self._scale
-
-    def start(self):
-        self._enabled = True
-        self._rb.hide()
-        self._origin = None
-
-    def stop(self):
-        self._enabled = False
-        self._rb.hide()
-        self._scale = scale
-        self._apply_scale()
-        self._rb.hide()
-        self._origin = None
-
-    def current_scale(self) -> float:
-        return self._scale
-
-    def start(self):
-        self._enabled = True
-        self._rb.hide()
-        self._origin = None
-
-    def stop(self):
-        self._enabled = False
-        self._rb.hide()
-
-    def mousePressEvent(self, e):
-        if not self._enabled:
-            return
-        self._origin = e.pos()
-        self._rb.setGeometry(QtCore.QRect(self._origin, QtCore.QSize()))
-        self._rb.show()
-
-    def mouseMoveEvent(self, e):
-        if not self._enabled or self._origin is None:
-            return
-        rect = QtCore.QRect(self._origin, e.pos()).normalized()
-        self._rb.setGeometry(rect)
-
-    def mouseReleaseEvent(self, e):
-        if not self._enabled or self._origin is None:
-            return
-        rect = QtCore.QRect(self._origin, e.pos()).normalized()
-        self._rb.hide()
-        self._enabled = False
-        self._origin = None
+    def _map_to_original(self, rect: QtCore.QRect) -> QtCore.QRect | None:
+        if rect.isNull() or self._orig_pixmap.isNull():
+            return None
+        rect = rect.normalized()
         scale = self._scale if self._scale else 1.0
-        orig_width = self._orig_pixmap.width()
-        orig_height = self._orig_pixmap.height()
-        x1 = max(0, int(math.floor(rect.left() / scale)))
-        y1 = max(0, int(math.floor(rect.top() / scale)))
-        x2 = max(0, int(math.ceil((rect.right() + 1) / scale) - 1))
-        y2 = max(0, int(math.ceil((rect.bottom() + 1) / scale) - 1))
-        x2 = min(orig_width - 1, x2)
-        y2 = min(orig_height - 1, y2)
+        x1 = max(0, int(rect.left() / scale))
+        y1 = max(0, int(rect.top() / scale))
+        x2 = max(0, int((rect.right() + 1) / scale) - 1)
+        y2 = max(0, int((rect.bottom() + 1) / scale) - 1)
+        x2 = min(self._orig_pixmap.width() - 1, x2)
+        y2 = min(self._orig_pixmap.height() - 1, y2)
         if x2 <= x1:
-            x2 = min(orig_width - 1, x1 + 1)
+            x2 = min(self._orig_pixmap.width() - 1, x1 + 1)
         if y2 <= y1:
-            y2 = min(orig_height - 1, y1 + 1)
-        orig_rect = QtCore.QRect(QtCore.QPoint(x1, y1), QtCore.QPoint(x2, y2))
-        self.rectSelected.emit(orig_rect)
+            y2 = min(self._orig_pixmap.height() - 1, y1 + 1)
+        return QtCore.QRect(QtCore.QPoint(x1, y1), QtCore.QPoint(x2, y2))
 
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        if self._selection_rect.isNull():
+            return
+        rect = self._selection_rect
+        pix = self.pixmap()
+        if pix is None or pix.isNull():
+            return
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        if self._blur_pixmap is not None and not self._blur_pixmap.isNull():
+            src = QtCore.QRect(rect.topLeft(), rect.size()).intersected(self._blur_pixmap.rect())
+            if not src.isEmpty():
+                painter.setOpacity(0.85)
+                painter.drawPixmap(rect.topLeft(), self._blur_pixmap, src)
+                painter.setOpacity(1.0)
+        painter.setBrush(QtGui.QColor(255, 255, 255, 70))
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 220), 2))
+        painter.drawRoundedRect(rect, 8, 8)
+        painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0, 60), 1))
+        painter.drawRoundedRect(rect.adjusted(1, 1, -1, -1), 8, 8)
+        painter.end()
 class TemplateCaptureDialog(QtWidgets.QDialog):
     def __init__(self, roi_path: str, parent=None, item_name: str | None = None):
         super().__init__(parent)

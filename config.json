@@ -4,5 +4,14 @@
     "y1": 0.01,
     "x2": 0.99,
     "y2": 0.4
+  },
+  "hotkeys": {
+    "item_capture": "F1",
+    "inventory_scan": "F2",
+    "template_capture": "F3"
+  },
+  "overlay": {
+    "duration_ms": 4000,
+    "inventory_duration_ms": 4000
   }
 }

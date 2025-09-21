@@ -12,6 +12,7 @@ from gui import MainWindow
 from overlay import PriceOverlay
 from worker import OCRWorker
 from ocr import DEFAULT_TESSERACT_EXE
+from config import load_config
 
 def main():
     # Configure logging: console + file
@@ -28,17 +29,26 @@ def main():
 
     app = QtWidgets.QApplication(sys.argv)
 
+    cfg = load_config()
+    hotkeys_cfg = cfg.get("hotkeys", {}) if isinstance(cfg, dict) else {}
+    item_hotkey = hotkeys_cfg.get("item_capture", "F1")
+    inventory_hotkey = hotkeys_cfg.get("inventory_scan", "F2")
+    capture_hotkey = hotkeys_cfg.get("template_capture", "F3")
+    overlay_cfg = cfg.get("overlay", {}) if isinstance(cfg, dict) else {}
+    overlay_duration = max(500, int(overlay_cfg.get("duration_ms", 4000) or 4000))
+    inventory_overlay_duration = max(500, int(overlay_cfg.get("inventory_duration_ms", overlay_duration) or overlay_duration))
+
     db = PriceDB()
-    win = MainWindow(db)
+    win = MainWindow(db, start_hotkey=item_hotkey, inventory_hotkey=inventory_hotkey, capture_hotkey=capture_hotkey)
     win.show()
 
-    overlay = PriceOverlay()
+    overlay = PriceOverlay(box_duration_ms=overlay_duration, hint_duration_ms=inventory_overlay_duration)
     # Defaults: hotkey F1, Tesseract at default Windows path
     worker = OCRWorker(
         db,
-        hotkey=(win.hotkeyEdit.text().strip() or "F1"),
-        inventory_hotkey=getattr(win, 'inventoryHotkey', "F2"),
-        capture_hotkey=getattr(win, 'captureHotkey', "F3"),
+        hotkey=win.hotkey,
+        inventory_hotkey=getattr(win, 'inventoryHotkey', inventory_hotkey),
+        capture_hotkey=getattr(win, 'captureHotkey', capture_hotkey),
         tesseract_path=(win.tessPath.text().strip() or DEFAULT_TESSERACT_EXE),
         template_threshold=float(getattr(win, 'thresholdSpin').value()),
         save_debug_images=bool(getattr(win, 'debugImgCheck').isChecked()),
