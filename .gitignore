@@ -37,3 +37,4 @@ template_cache/
 *.swp
 .DS_Store
 Thumbs.db
+prices.json
