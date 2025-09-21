@@ -2,7 +2,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 import re
 
 VALUE_RE = re.compile(r"-?\d[\d\s]*")
-PRICE_THRESHOLD = 100_000
+PRICE_THRESHOLD = 100000
 
 
 def _extract_value(line: str) -> int | None:
