@@ -1,6 +1,12 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to this project will be documented in this file.
+
+## 0.0.7 - 2025-09-21
+- Переработан формат prices.json: одна запись на предмет, добавлены поля price_lp0…price_lp4 и comment_lp0…comment_lp4, поддержка заметок и сохранение порядка в known_order.
+- Обновлены db.py, GUI и worker: таблица цен показывает LP-колонки, поиск и оверлей используют новые поля.
+- Добавлен скрипт миграции legacy-базы (scripts/migrate_prices_lp.py) и тесты для проверки конверсии.
+- Обновлена документация (README, AGENTS) и примеры, отражающие обязательный запуск миграции.
 
 ## 0.0.6 - 2025-09-21
 - Полностью убран Tesseract и любые вызовы OCR: воркер работает только через шаблоны и сразу предлагает снять новый образец.
@@ -29,3 +35,4 @@ All notable changes to this project will be documented in this file.
 ## 0.0.1 - 2025-09-21
 - Added bilingual FAQ (EN/RU) to the README.
 - Documented workflow rules for Git usage, changelog maintenance, and version bumps in AGENTS.md.
+

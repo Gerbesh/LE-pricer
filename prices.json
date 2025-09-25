@@ -1,455 +1,534 @@
 {
-  "known": [
-    {
+  "known": {
+    "святилище отступника": {
       "name": "святилище отступника",
-      "potential": null,
-      "price": 0.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 0.0,
+      "comment_lp0": null,
+      "price_lp1": 1000.0,
+      "comment_lp1": null,
+      "price_lp2": 70000.0,
+      "comment_lp2": null,
+      "price_lp3": 5000000.0,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "святилище отступника",
-      "potential": 1,
-      "price": 1000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "святилище отступника",
-      "potential": 2,
-      "price": 70000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "святилище отступника",
-      "potential": 3,
-      "price": 5000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "завершение эволюции": {
       "name": "завершение эволюции",
-      "potential": null,
-      "price": 5000000.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 5000000.0,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "воля отступника ",
-      "potential": 2,
-      "price": 1000.0,
-      "updated_at": "2025-09-21T15:50:04"
+    "воля отступника": {
+      "name": "воля отступника",
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": 1000.0,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "концентрация ярости": {
       "name": "концентрация ярости",
-      "potential": null,
-      "price": 1000.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 1000.0,
+      "comment_lp0": null,
+      "price_lp1": 1000.0,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "концентрация ярости",
-      "potential": 1,
-      "price": 1000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "лик маджасы": {
       "name": "лик маджасы",
-      "potential": null,
-      "price": 460000.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 460000.0,
+      "comment_lp0": null,
+      "price_lp1": 550000.0,
+      "comment_lp1": null,
+      "price_lp2": 5000000.0,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "лик маджасы",
-      "potential": 1,
-      "price": 550000.0,
-      "updated_at": "2025-09-21T15:50:04"
+    "зов тундры": {
+      "name": "зов тундры",
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 3 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "лик маджасы",
-      "potential": 2,
-      "price": 5000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "зов тундры ",
-      "potential": null,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "катаклизм": {
       "name": "катаклизм",
-      "potential": null,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 3 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": "до 3 лп мусор",
+      "price_lp2": null,
+      "comment_lp2": "до 3 лп мусор",
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "катаклизм",
-      "potential": 1,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
+    "танец дождя": {
+      "name": "танец дождя",
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "катаклизм",
-      "potential": 2,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "танец дождя ",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "незыблемость первозданного знания": {
       "name": "незыблемость первозданного знания",
-      "potential": null,
-      "price": "мусор до 1 лп",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор до 1 лп",
+      "price_lp1": 200000.0,
+      "comment_lp1": null,
+      "price_lp2": 5000000.0,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "незыблемость первозданного знания",
-      "potential": 1,
-      "price": 200000.0,
-      "updated_at": "2025-09-21T15:50:04"
+    "падение праведника": {
+      "name": "Падение праведника",
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 3 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "незыблемость первозданного знания",
-      "potential": 2,
-      "price": 5000000.0,
-      "updated_at": "2025-09-21T15:50:04"
+    "поземка": {
+      "name": "поземка",
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": 800000.0,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "Падение праведника ",
-      "potential": null,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "поземка ",
-      "potential": 2,
-      "price": 800000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "летопись проклятых": {
       "name": "летопись проклятых",
-      "potential": 2,
-      "price": "до 4 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": "до 4 лп мусор",
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "клык ткача сфер": {
       "name": "клык ткача сфер",
-      "potential": null,
-      "price": "до 20 паутинок мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 20 паутинок мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "перчатки пчеловода": {
       "name": "перчатки пчеловода",
-      "potential": 2,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": "мусор",
+      "price_lp2": null,
+      "comment_lp2": "мусор",
+      "price_lp3": null,
+      "comment_lp3": "мусор",
+      "price_lp4": null,
+      "comment_lp4": "мусор"
     },
-    {
-      "name": "перчатки пчеловода",
-      "potential": 1,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "перчатки пчеловода",
-      "potential": 3,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "перчатки пчеловода",
-      "potential": 4,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "перчатки пчеловода",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "пеленание стертых": {
       "name": "пеленание стертых",
-      "potential": null,
-      "price": "до 20 паутины мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 20 паутины мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "лапы штормовой шкуры": {
       "name": "лапы штормовой шкуры",
-      "potential": null,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 3 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": "до 3 лп мусор",
+      "price_lp2": null,
+      "comment_lp2": "до 3 лп мусор",
+      "price_lp3": 300000.0,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "лапы штормовой шкуры",
-      "potential": 1,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "лапы штормовой шкуры",
-      "potential": 2,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "лапы штормовой шкуры",
-      "potential": 3,
-      "price": 300000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "алчность": {
       "name": "алчность",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "жажда жизни": {
       "name": "жажда жизни",
-      "potential": 0,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": "мусор",
+      "price_lp2": null,
+      "comment_lp2": "мусор",
+      "price_lp3": null,
+      "comment_lp3": "мусор",
+      "price_lp4": null,
+      "comment_lp4": "мусор"
     },
-    {
-      "name": "жажда жизни",
-      "potential": 1,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "жажда жизни",
-      "potential": 2,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "жажда жизни",
-      "potential": 3,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "жажда жизни",
-      "potential": 4,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "вершина горы": {
       "name": "вершина горы",
-      "potential": null,
-      "price": "до 2 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 2 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": "до 2 лп мусор",
+      "price_lp2": 200000.0,
+      "comment_lp2": null,
+      "price_lp3": 12000000.0,
+      "comment_lp3": null,
+      "price_lp4": 120000000.0,
+      "comment_lp4": null
     },
-    {
-      "name": "вершина горы",
-      "potential": 1,
-      "price": "до 2 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "вершина горы",
-      "potential": 2,
-      "price": 200000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "вершина горы",
-      "potential": 3,
-      "price": 12000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "вершина горы",
-      "potential": 4,
-      "price": 120000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "костер скорби": {
       "name": "костер скорби",
-      "potential": null,
-      "price": null,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "дар ткача": {
       "name": "дар ткача",
-      "potential": null,
-      "price": "до 20 паутины мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 20 паутины мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "факел понтифика": {
       "name": "факел понтифика",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": "мусор",
+      "price_lp2": null,
+      "comment_lp2": "мусор",
+      "price_lp3": null,
+      "comment_lp3": "мусор",
+      "price_lp4": null,
+      "comment_lp4": "мусор"
     },
-    {
-      "name": "факел понтифика",
-      "potential": 1,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "факел понтифика",
-      "potential": 2,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "факел понтифика",
-      "potential": 3,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "факел понтифика",
-      "potential": 4,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "двузубец турани": {
       "name": "двузубец турани",
-      "potential": null,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "до 3 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": "до 3 лп мусор",
+      "price_lp2": null,
+      "comment_lp2": "до 3 лп мусор",
+      "price_lp3": 3000000.0,
+      "comment_lp3": null,
+      "price_lp4": 30000000.0,
+      "comment_lp4": null
     },
-    {
-      "name": "двузубец турани",
-      "potential": 1,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "двузубец турани",
-      "potential": 2,
-      "price": "до 3 лп мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "двузубец турани",
-      "potential": 3,
-      "price": 3000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "двузубец турани",
-      "potential": 4,
-      "price": 30000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "заросли ослепляющего света": {
       "name": "заросли ослепляющего света",
-      "potential": null,
-      "price": 400000.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 400000.0,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "черпак алхимика": {
       "name": "черпак алхимика",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": "мусор",
+      "price_lp2": null,
+      "comment_lp2": "мусор",
+      "price_lp3": null,
+      "comment_lp3": "мусор",
+      "price_lp4": null,
+      "comment_lp4": "мусор"
     },
-    {
-      "name": "черпак алхимика",
-      "potential": 1,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "черпак алхимика",
-      "potential": 2,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "черпак алхимика",
-      "potential": 3,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "черпак алхимика",
-      "potential": 4,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "мудрость ируна": {
       "name": "мудрость ируна",
-      "potential": null,
-      "price": 1000.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 1000.0,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "подножие горы",
-      "potential": null,
-      "price": null,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "каменные кулаки": {
       "name": "каменные кулаки",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": null,
+      "comment_lp1": "мусор",
+      "price_lp2": null,
+      "comment_lp2": "мусор",
+      "price_lp3": 30000.0,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": "?"
     },
-    {
-      "name": "каменные кулаки",
-      "potential": 1,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "каменные кулаки",
-      "potential": 2,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "каменные кулаки",
-      "potential": 3,
-      "price": 30000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "каменные кулаки",
-      "potential": 4,
-      "price": "?",
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
+    "соколиные кулаки": {
       "name": "соколиные кулаки",
-      "potential": null,
-      "price": 0.0,
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": 0.0,
+      "comment_lp0": null,
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
+    "костяной барбют": {
       "name": "костяной барбют",
-      "potential": null,
-      "price": "мусор",
-      "updated_at": "2025-09-21T15:50:04"
+      "notes": null,
+      "created_at": "2025-09-21T15:50:04",
+      "updated_at": "2025-09-21T15:50:04",
+      "price_lp0": null,
+      "comment_lp0": "мусор",
+      "price_lp1": 400000.0,
+      "comment_lp1": null,
+      "price_lp2": 8000000.0,
+      "comment_lp2": null,
+      "price_lp3": 12000000.0,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": "?"
     },
-    {
-      "name": "костяной барбют",
-      "potential": 1,
-      "price": 400000.0,
-      "updated_at": "2025-09-21T15:50:04"
+    "наследие стертых": {
+      "name": "наследие стертых",
+      "notes": null,
+      "created_at": "2025-09-21T16:40:58",
+      "updated_at": "2025-09-21T16:41:28",
+      "price_lp0": null,
+      "comment_lp0": "до 20 паутины мусор",
+      "price_lp1": null,
+      "comment_lp1": null,
+      "price_lp2": null,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     },
-    {
-      "name": "костяной барбют",
-      "potential": 2,
-      "price": 8000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "костяной барбют",
-      "potential": 3,
-      "price": 12000000.0,
-      "updated_at": "2025-09-21T15:50:04"
-    },
-    {
-      "name": "костяной барбют",
-      "potential": 4,
-      "price": "?",
-      "updated_at": "2025-09-21T15:50:04"
+    "мертвая плоть мироздания": {
+      "name": "мертвая плоть мироздания",
+      "notes": null,
+      "created_at": "2025-09-21T16:47:17",
+      "updated_at": "2025-09-21T16:47:45",
+      "price_lp0": null,
+      "comment_lp0": "до 2 лп мусор",
+      "price_lp1": null,
+      "comment_lp1": "до 2 лп мусор",
+      "price_lp2": 10000000.0,
+      "comment_lp2": null,
+      "price_lp3": null,
+      "comment_lp3": null,
+      "price_lp4": null,
+      "comment_lp4": null
     }
+  },
+  "known_order": [
+    "святилище отступника",
+    "завершение эволюции",
+    "воля отступника",
+    "концентрация ярости",
+    "лик маджасы",
+    "зов тундры",
+    "катаклизм",
+    "танец дождя",
+    "незыблемость первозданного знания",
+    "падение праведника",
+    "поземка",
+    "летопись проклятых",
+    "клык ткача сфер",
+    "перчатки пчеловода",
+    "пеленание стертых",
+    "лапы штормовой шкуры",
+    "алчность",
+    "жажда жизни",
+    "вершина горы",
+    "костер скорби",
+    "дар ткача",
+    "факел понтифика",
+    "двузубец турани",
+    "заросли ослепляющего света",
+    "черпак алхимика",
+    "мудрость ируна",
+    "каменные кулаки",
+    "соколиные кулаки",
+    "костяной барбют",
+    "наследие стертых",
+    "мертвая плоть мироздания"
   ],
   "pending": []
 }

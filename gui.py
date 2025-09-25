@@ -1,4 +1,4 @@
-
+﻿
 import os
 import math
 import logging
@@ -50,46 +50,100 @@ class PendingModel(QtCore.QAbstractTableModel):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
 class KnownModel(QtCore.QAbstractTableModel):
-    headers = ["Название", "Потенциал", "Цена"]
+    lp_slots = list(range(5))
+    NAME_COLUMN = 0
+    LP_START_COLUMN = 1
+    NOTES_COLUMN = LP_START_COLUMN + len(lp_slots)
+    UPDATED_COLUMN = NOTES_COLUMN + 1
+
+    headers = ["Название", "LP0", "LP1", "LP2", "LP3", "LP4", "Заметки", "Обновлено"]
+
     def __init__(self, db: PriceDB):
         super().__init__()
         self.db = db
         self.rows = self.db.list_known()
-        self._edits: dict[tuple[int,int], str] = {}
+        self._edits: dict[tuple[int, int], str] = {}
 
     def refresh(self):
         self.beginResetModel()
         self.rows = self.db.list_known()
+        self._edits.clear()
         self.endResetModel()
 
-    def rowCount(self, parent=None): return len(self.rows)
-    def columnCount(self, parent=None): return 3
+    def rowCount(self, parent=None):
+        return len(self.rows)
+
+    def columnCount(self, parent=None):
+        return len(self.headers)
+
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
             return self.headers[section]
         return None
+
+    def _lp_cell_text(self, entry: dict[str, object], pot: int) -> str:
+        comment = entry.get(f"comment_lp{pot}")
+        if isinstance(comment, str) and comment.strip():
+            return comment
+        price = entry.get(f"price_lp{pot}")
+        if price is None:
+            return ""
+        if isinstance(price, float) and price.is_integer():
+            return str(int(price))
+        return str(price)
+
+    def _value_for_cell(self, row: int, column: int) -> str:
+        if (row, column) in self._edits:
+            return self._edits[(row, column)]
+        entry = self.rows[row]
+        if column == self.NAME_COLUMN:
+            return entry.get("name", "")
+        pot = self.column_to_potential(column)
+        if pot is not None:
+            return self._lp_cell_text(entry, pot)
+        if column == self.NOTES_COLUMN:
+            return entry.get("notes", "") or ""
+        if column == self.UPDATED_COLUMN:
+            return entry.get("updated_at", "") or ""
+        return ""
+
     def data(self, index, role):
-        if not index.isValid(): return None
-        r = self.rows[index.row()]
-        c = index.column()
+        if not index.isValid():
+            return None
         if role in (QtCore.Qt.DisplayRole, QtCore.Qt.EditRole):
-            if (index.row(), c) in self._edits:
-                return self._edits[(index.row(), c)]
-            if c == 0: return r.get("name","")
-            if c == 1: return r.get("potential","")
-            if c == 2: return r.get("price","")
+            return self._value_for_cell(index.row(), index.column())
         return None
+
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if not index.isValid() or role != QtCore.Qt.EditRole:
             return False
-        r = index.row(); c = index.column()
-        # store as plain text edits; parsing occurs on save
-        self._edits[(r, c)] = str(value)
+        if index.column() == self.UPDATED_COLUMN:
+            return False
+        self._edits[(index.row(), index.column())] = str(value)
         self.dataChanged.emit(index, index, [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole])
         return True
+
     def flags(self, index):
-        if not index.isValid(): return QtCore.Qt.NoItemFlags
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEditable
+        if not index.isValid():
+            return QtCore.Qt.NoItemFlags
+        base = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        if index.column() == self.UPDATED_COLUMN:
+            return base
+        return base | QtCore.Qt.ItemIsEditable
+
+    def column_to_potential(self, column: int) -> int | None:
+        if self.LP_START_COLUMN <= column < self.LP_START_COLUMN + len(self.lp_slots):
+            return self.lp_slots[column - self.LP_START_COLUMN]
+        return None
+
+    def iter_lp_columns(self):
+        for offset, pot in enumerate(self.lp_slots):
+            yield self.LP_START_COLUMN + offset, pot
+
+    def cell_text(self, row: int, column: int) -> str:
+        value = self.data(self.index(row, column), role=QtCore.Qt.EditRole)
+        return "" if value is None else str(value)
+
 
 class MainWindow(QtWidgets.QMainWindow):
     # signals from worker
@@ -188,47 +242,46 @@ class MainWindow(QtWidgets.QMainWindow):
     # pending tab removed: direct editing in Known table only
 
     def _save_known_changes(self):
-        # iterate rows and write back
+        errors: list[str] = []
         for r, row in enumerate(self.knownModel.rows):
-            # prefer edited values if present
-            name = self.knownModel.data(self.knownModel.index(r,0), role=QtCore.Qt.EditRole)
-            pot_raw = self.knownModel.data(self.knownModel.index(r,1), role=QtCore.Qt.EditRole)
+            key = row.get("key")
+            if not key:
+                continue
+            name = self.knownModel.cell_text(r, self.knownModel.NAME_COLUMN).strip()
+            notes = self.knownModel.cell_text(r, self.knownModel.NOTES_COLUMN).strip()
+            lp_values: dict[int, str] = {}
+            for col, pot in self.knownModel.iter_lp_columns():
+                lp_values[pot] = self.knownModel.cell_text(r, col)
             try:
-                pot = int(str(pot_raw).strip()) if str(pot_raw).strip() != "" else None
-            except:
-                pot = None
-            # Price supports text comments or numeric
-            price_raw = self.knownModel.data(self.knownModel.index(r,2), role=QtCore.Qt.EditRole)
-            price_text = str(price_raw) if price_raw is not None else ""
-            price_text = price_text.strip()
-            if price_text == "":
-                price: float | str | None = None
-            else:
-                try:
-                    price = float(price_text.replace(",", "."))
-                except Exception:
-                    price = price_text  # keep textual comment
-            self.db.edit_known(r, name=name, price=price, potential=pot)
+                self.db.edit_known(key, name=name, notes=notes, lp_values=lp_values)
+            except ValueError as exc:
+                errors.append(str(exc))
+            except Exception as exc:
+                errors.append(f"{name or key}: {exc}")
         self.knownModel.refresh()
-        self.status.showMessage("Изменения сохранены.", 3000)
+        if errors:
+            self.status.showMessage("Ошибки сохранения: " + "; ".join(errors), 6000)
+        else:
+            self.status.showMessage("Изменения сохранены.", 3000)
 
     def _delete_known_selected(self):
         sel = self.knownView.selectionModel().selectedRows()
-        names = []
+        keys: list[str] = []
         for idx in sel:
             row = idx.row()
-            name = self.knownModel.rows[row].get("name", "")
-            if name:
-                names.append(name)
-        if not names:
+            entry = self.knownModel.rows[row]
+            key = entry.get("key")
+            if key:
+                keys.append(key)
+        if not keys:
             self.status.showMessage("Нет выбранных строк для удаления.", 2500)
             return
-        removed = self.db.delete_known(names)
+        removed = self.db.delete_known(keys)
         self.knownModel.refresh()
         self.status.showMessage(f"Удалено из оцененных: {removed}.", 3000)
 
     def _add_known_row(self):
-        self.db.add_known("", None, None)
+        self.db.add_known()
         self.knownModel.refresh()
 
     # no _delete_pending_selected in simplified mode
@@ -526,27 +579,17 @@ class TemplateCaptureDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить образцы: {e}")
 
     def _ensure_db_entry(self, name: str):
-        # Find parent with .db
         par = self.parent()
         db = getattr(par, 'db', None)
         model = getattr(par, 'knownModel', None)
         if db is None:
             return
-        potential = None  # LP is detected globally; DB entry initially without LP
         target = (name or '').strip().lower()
         rows = db.list_known()
-        exact_exists = False
-        idx_nonepot = None
-        for idx, rec in enumerate(rows):
-            if (rec.get('name','') or '').strip().lower() == target:
-                if rec.get('potential') == potential:
-                    exact_exists = True
-                    break
-                if rec.get('potential') is None and idx_nonepot is None:
-                    idx_nonepot = idx
-        if exact_exists:
-            return
-        db.add_known(name, None, potential)
+        for rec in rows:
+            if (rec.get('name', '') or '').strip().lower() == target:
+                return
+        db.add_known(name)
         try:
             if model is not None:
                 model.refresh()
@@ -747,27 +790,17 @@ class TemplateCaptureDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить образцы: {e}")
 
     def _ensure_db_entry(self, name: str):
-        # Find parent with .db
         par = self.parent()
         db = getattr(par, 'db', None)
         model = getattr(par, 'knownModel', None)
         if db is None:
             return
-        potential = None  # LP is detected globally; DB entry initially without LP
         target = (name or '').strip().lower()
         rows = db.list_known()
-        exact_exists = False
-        idx_nonepot = None
-        for idx, rec in enumerate(rows):
-            if (rec.get('name','') or '').strip().lower() == target:
-                if rec.get('potential') == potential:
-                    exact_exists = True
-                    break
-                if rec.get('potential') is None and idx_nonepot is None:
-                    idx_nonepot = idx
-        if exact_exists:
-            return
-        db.add_known(name, None, potential)
+        for rec in rows:
+            if (rec.get('name', '') or '').strip().lower() == target:
+                return
+        db.add_known(name)
         try:
             if model is not None:
                 model.refresh()

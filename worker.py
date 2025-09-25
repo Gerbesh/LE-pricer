@@ -139,6 +139,38 @@ class OCRWorker(QtCore.QObject):
         except Exception:
             return str(value)
 
+    def _lp_value_for_entry(self, entry: dict[str, object], pot: int):
+        comment = entry.get(f"comment_lp{pot}")
+        if isinstance(comment, str) and comment.strip():
+            return comment
+        return entry.get(f"price_lp{pot}")
+
+    def _price_for_entry(self, entry: dict[str, object], potential: int | None):
+        candidates: list[int] = []
+        if potential is not None:
+            try:
+                pot = int(potential)
+            except Exception:
+                pot = None
+            if pot is not None and 0 <= pot <= 4:
+                candidates.append(pot)
+        if 0 not in candidates:
+            candidates.append(0)
+        for pot in range(1, 5):
+            if pot not in candidates:
+                candidates.append(pot)
+        for pot in candidates:
+            value = self._lp_value_for_entry(entry, pot)
+            if value is None:
+                continue
+            if isinstance(value, str) and not value.strip():
+                continue
+            return value
+        notes = entry.get('notes')
+        if isinstance(notes, str) and notes.strip():
+            return notes
+        return None
+
     def _inventory_lines_for_item(self, item_name: str) -> list[str]:
         prices = self.db.get_prices_by_potential(item_name, threshold=70)
         title = item_name.strip() or "Неизвестный предмет"
@@ -281,7 +313,7 @@ class OCRWorker(QtCore.QObject):
                 if not rec:
                     rec, sc = self.db.find_best([item_name], threshold=80)
                 if rec is not None:
-                    price_txt = rec.get("price")
+                    price_txt = self._price_for_entry(rec, potential if potential is not None else None)
                 # Compose overlay text: name(+LP) on first line, price/comment on second
                 if price_txt is None or str(price_txt).strip() == "":
                     second = "нет в таблице"

@@ -1,4 +1,4 @@
-# Repository Guidelines
+﻿# Repository Guidelines
 
 ## Project Structure & Modules
 - Root-level Python app. Key files: `main.py` (entry), `gui.py` (UI), `worker.py` (background tasks), `ocr.py` (recognition), `overlay.py` (display), `db.py` (data access), `prices.json` (sample data), `requirements.txt` (deps).
@@ -7,6 +7,7 @@
 ## Build, Run, and Dev
 - Install deps: `py -3.12 -m venv .venv && .venv\Scripts\python -m pip install -r requirements.txt` (Windows 10/11) or `python3.12 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt` (Unix).
 - Run app: `python main.py`.
+- Legacy DB migration: `python scripts/migrate_prices_lp.py --input prices.json` prior to running new builds.
 - Lint (if installed): `ruff .` and `flake8 .`.
 - Format (if installed): `ruff format .` or `black .`.
 
@@ -18,7 +19,7 @@
 
 ## Testing Guidelines
 - Framework: `pytest`. Add `pytest` to `requirements.txt` when introducing tests.
-- Naming: files `tests/test_*.py`; tests use Arrange–Act–Assert pattern.
+- Naming: files `tests/test_*.py`; tests use ArrangeвЂ“ActвЂ“Assert pattern.
 - Run tests: `pytest -q` (optionally `-k name` to filter). Aim for coverage of critical paths (DB I/O, OCR parsing, worker flows).
 
 ## Commit & PR Guidelines
@@ -37,3 +38,5 @@
 - Maintain an up-to-date CHANGELOG.md documenting features, fixes, and documentation updates.
 - Bump the project version in the VERSION file by +0.0.1 with each change (e.g., 0.0.9 -> 0.0.10, roll over to 0.1.0); keep semantic progression consistent.
 - For PowerShell commands that write files, always specify UTF-8 encoding (e.g., `-Encoding UTF8`) so Cyrillic text stays intact.
+
+
