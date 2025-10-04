@@ -15,6 +15,11 @@ from config import load_config
 
 def main():
     # Configure logging: console + file
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+
     os.makedirs("logs", exist_ok=True)
     log_fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
     logging.basicConfig(
@@ -64,7 +69,7 @@ def main():
     worker.dbChanged.connect(_on_db_changed)
 
     # react to settings change
-    def apply_settings():
+    def apply_settings(*_args):
         worker.update_settings(
             hotkey=win.hotkeyEdit.text().strip() or "F1",
             inventory_hotkey=getattr(win, "inventoryHotkey", getattr(worker, "inventory_hotkey", "F2")),
@@ -77,6 +82,7 @@ def main():
 
     win.hotkeyEdit.editingFinished.connect(apply_settings)
     win.thresholdSpin.valueChanged.connect(apply_settings)
+    win.debugImgCheck.toggled.connect(apply_settings)
     # soft OCR removed
 
     # start listener

@@ -73,6 +73,10 @@ class OCRWorker(QtCore.QObject):
         self.capture_hotkey = capture_hotkey
         self.template_threshold = template_threshold
         self.save_debug_images = bool(save_debug_images)
+        try:
+            set_debug_image_saving(self.save_debug_images)
+        except Exception:
+            pass
         self._running = False
         self._thread = None
         self._hotkey_handles: list[int] = []
@@ -86,13 +90,13 @@ class OCRWorker(QtCore.QObject):
         handles: list[int] = []
         try:
             self._log.info("Registering hotkey '%s' for price check", self.hotkey)
-            handles.append(keyboard.add_hotkey(self.hotkey, self._on_trigger, suppress=True))
+            handles.append(keyboard.add_hotkey(self.hotkey, self._on_trigger, suppress=False))
             self._log.info("Hotkey listener started on '%s'", self.hotkey)
             
             if self.inventory_hotkey:
                 try:
                     self._log.info("Registering inventory hotkey '%s'", self.inventory_hotkey)
-                    handles.append(keyboard.add_hotkey(self.inventory_hotkey, self._on_inventory_scan, suppress=True))
+                    handles.append(keyboard.add_hotkey(self.inventory_hotkey, self._on_inventory_scan, suppress=False))
                     self._log.info("Inventory hotkey started on '%s'", self.inventory_hotkey)
                 except Exception as exc:
                     self._log.exception("Failed to register inventory hotkey '%s': %s", self.inventory_hotkey, exc)
@@ -100,7 +104,7 @@ class OCRWorker(QtCore.QObject):
             if self.capture_hotkey:
                 try:
                     self._log.info("Registering capture hotkey '%s'", self.capture_hotkey)
-                    handles.append(keyboard.add_hotkey(self.capture_hotkey, self._on_manual_capture, suppress=True))
+                    handles.append(keyboard.add_hotkey(self.capture_hotkey, self._on_manual_capture, suppress=False))
                     self._log.info("Capture hotkey started on '%s'", self.capture_hotkey)
                 except Exception as exc:
                     self._log.exception("Failed to register capture hotkey '%s': %s", self.capture_hotkey, exc)
@@ -239,13 +243,9 @@ class OCRWorker(QtCore.QObject):
     def _on_inventory_scan(self):
         try:
             self._log.debug("Inventory scan triggered. Detecting item templates...")
-            self.status.emit("Сканирую инвентарь...")
+            self.status.emit("Сканирую весь экран...")
             screen_left, screen_top, screen_w, screen_h = _screen_geom()
-            inv_left = screen_left + screen_w // 2
-            inv_top = screen_top + screen_h // 2
-            inv_w = max(1, screen_w - (inv_left - screen_left))
-            inv_h = max(1, screen_h - (inv_top - screen_top))
-            roi_img = _grab_bbox(inv_left, inv_top, inv_w, inv_h)
+            roi_img = _grab_bbox(screen_left, screen_top, screen_w, screen_h)
             matches = match_inventory_regions(roi_img, threshold=0.80)
             hints: list[dict[str, object]] = []
             for match in matches:
@@ -253,10 +253,10 @@ class OCRWorker(QtCore.QObject):
                 if not rect or len(rect) != 4:
                     continue
                 global_rect = (
-                    inv_left + int(rect[0]),
-                    inv_top + int(rect[1]),
-                    inv_left + int(rect[2]),
-                    inv_top + int(rect[3]),
+                    screen_left + int(rect[0]),
+                    screen_top + int(rect[1]),
+                    screen_left + int(rect[2]),
+                    screen_top + int(rect[3]),
                 )
                 item_name = str(match.get("item") or "")
                 lines = self._inventory_lines_for_item(item_name)

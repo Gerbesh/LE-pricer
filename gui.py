@@ -529,8 +529,25 @@ class TemplateCaptureDialog(QtWidgets.QDialog):
         self.saveBtn.setEnabled(False)
 
         layout = QtWidgets.QVBoxLayout(self)
+
+        self._full_screen_geom: QtCore.QRect | None = None
+        screen = None
+        parent = self.parent()
+        if parent is not None:
+            window_handle = getattr(parent, "windowHandle", None)
+            if callable(window_handle):
+                handle = window_handle()
+                if handle is not None:
+                    screen = handle.screen()
+        if screen is None:
+            screen = QtWidgets.QApplication.screenAt(QtGui.QCursor.pos())
+        if screen is None:
+            screen = QtWidgets.QApplication.primaryScreen()
+        if screen is not None:
+            self._full_screen_geom = screen.geometry()
+            self.setGeometry(self._full_screen_geom)
         layout.addWidget(self.stepLbl)
-        layout.addWidget(self.view, alignment=QtCore.Qt.AlignCenter)
+        layout.addWidget(self.view, 1)
 
         form = QtWidgets.QFormLayout()
         form.addRow("Название предмета:", self.itemEdit)
@@ -549,7 +566,8 @@ class TemplateCaptureDialog(QtWidgets.QDialog):
             self.itemEdit.setText(item_name)
         # Start step 1
         self._step = 1
-        QtCore.QTimer.singleShot(50, self.view.start)
+        QtCore.QTimer.singleShot(0, self._apply_fullscreen)
+        QtCore.QTimer.singleShot(100, self.view.start)
 
     def _on_rect(self, rect: QtCore.QRect):
         if self._step == 1:
@@ -577,6 +595,11 @@ class TemplateCaptureDialog(QtWidgets.QDialog):
             self.accept()
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Ошибка", f"Не удалось сохранить образцы: {e}")
+
+    def _apply_fullscreen(self) -> None:
+        if self._full_screen_geom is not None:
+            self.setGeometry(self._full_screen_geom)
+        self.showMaximized()
 
     def _ensure_db_entry(self, name: str):
         par = self.parent()
